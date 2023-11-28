@@ -1,0 +1,43 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace "com.arch.youtube"
+    compileSdkVersion 34
+    buildToolsVersion '34.0.0'
+
+    defaultConfig {
+        applicationId "com.arch.youtube.demo"
+        minSdkVersion 14
+        targetSdkVersion 29
+        multiDexEnabled true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFile getDefaultProguardFile('proguard-android.txt')
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    configurations {
+        all {
+            exclude module: 'httpclient'
+            exclude module: 'commons-logging'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.apis:google-api-services-youtube:v3-rev20200618-1.30.9'
+    implementation 'com.google.http-client:google-http-client-android:1.37.0'
+    implementation 'com.google.api-client:google-api-client-android:1.30.11'
+    implementation 'com.google.api-client:google-api-client-gson:1.30.11'
+
+    implementation 'com.github.bumptech.glide:glide:4.15.1'
+    //kapt 'com.github.bumptech.glide:compiler:4.15.1'
+}

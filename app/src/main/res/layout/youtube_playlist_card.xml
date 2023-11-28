@@ -1,0 +1,41 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card_view"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/selector"
+    android:clickable="true"
+    android:focusable="true">
+
+    <ImageView
+        android:id="@+id/video_thumbnail"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_alignParentTop="true"
+        android:adjustViewBounds="true"
+        tools:src="@drawable/ic_thumb_up" />
+
+    <TextView
+        android:id="@+id/video_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_margin="10dp"
+        android:layout_toRightOf="@id/video_thumbnail"
+        android:fontFamily="sans-serif-light"
+        android:textColor="@android:color/primary_text_light"
+        android:textSize="18sp"
+        tools:text="Video Title text that is long enough to make the line wrap around to the next line." />
+
+    <TextView
+        android:id="@+id/video_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/video_title"
+        android:layout_margin="10dp"
+        android:layout_toRightOf="@id/video_thumbnail"
+        android:fontFamily="sans-serif-light"
+        android:textColor="@android:color/secondary_text_light"
+        tools:text="This is a sample description of the video item that is long enough to wrap around to the next line." />
+
+</RelativeLayout>
