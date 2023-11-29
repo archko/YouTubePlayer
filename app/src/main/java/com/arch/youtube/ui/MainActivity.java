@@ -132,15 +132,15 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         }
     }
 
-    public static void prettyPrint(Iterator<SearchResult> iteratorSearchResults, String query) {
-
-        System.out.println("\n=============================================================");
-        System.out.println(
+    public static String prettyPrint(Iterator<SearchResult> iteratorSearchResults, String query) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n=============================================================");
+        sb.append(
                 "   First " + 25 + " videos for search on \"" + query + "\".");
-        System.out.println("=============================================================\n");
+        sb.append("=============================================================\n");
 
         if (!iteratorSearchResults.hasNext()) {
-            System.out.println(" There aren't any results for your query.");
+            sb.append(" There aren't any results for your query.");
         }
 
         while (iteratorSearchResults.hasNext()) {
@@ -153,12 +153,14 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
             if (rId.getKind().equals("youtube#video")) {
                 Thumbnail thumbnail = singleVideo.getSnippet().getThumbnails().getDefault();
 
-                System.out.println(" Video Id" + rId.getVideoId());
-                System.out.println(" Title: " + singleVideo.getSnippet().getTitle());
-                System.out.println(" Thumbnail: " + thumbnail.getUrl());
-                System.out.println("\n-------------------------------------------------------------\n");
+                sb.append(" Video Id" + rId.getVideoId());
+                sb.append(" Title: " + singleVideo.getSnippet().getTitle());
+                sb.append(" Thumbnail: " + thumbnail.getUrl());
+                sb.append("\n-------------------------------------------------------------\n");
             }
         }
+
+        return sb.toString();
     }
 
     @Override

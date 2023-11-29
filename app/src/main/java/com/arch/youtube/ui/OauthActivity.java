@@ -13,12 +13,12 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
-import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.LinearLayout;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.arch.youtube.R;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.extensions.android.http.AndroidHttp;
@@ -67,51 +67,39 @@ public class OauthActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        LinearLayout activityLayout = new LinearLayout(this);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT);
-        activityLayout.setLayoutParams(lp);
-        activityLayout.setOrientation(LinearLayout.VERTICAL);
-        activityLayout.setPadding(16, 16, 16, 16);
+        setContentView(R.layout.activity_oauth);
 
-        ViewGroup.LayoutParams tlp = new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
-
-        Button mCallApiButton = new Button(this);
-        mCallApiButton.setText(BUTTON_TEXT);
+        Button mCallApiButton = findViewById(R.id.btnOauth);
         mCallApiButton.setOnClickListener(v -> {
             mOutputText.setText("");
             getResultsFromApi();
         });
-        activityLayout.addView(mCallApiButton);
 
-        mCallApiButton = new Button(this);
-        mCallApiButton.setText(BUTTON_TEXT);
+        EditText etSearch = findViewById(R.id.etSearch);
+
+        mCallApiButton = findViewById(R.id.btnSearch);
         mCallApiButton.setOnClickListener(v -> {
-            new Thread(() -> performYoutubeSearch("qa")).start();
+            performYoutubeSearch(etSearch.getEditableText().toString());
         });
-        activityLayout.addView(mCallApiButton);
 
-        mOutputText = new TextView(this);
-        mOutputText.setLayoutParams(tlp);
-        mOutputText.setPadding(16, 16, 16, 16);
-        mOutputText.setVerticalScrollBarEnabled(true);
+        mOutputText = findViewById(R.id.output);
         mOutputText.setMovementMethod(new ScrollingMovementMethod());
         mOutputText.setText(
                 "Click the \'" + BUTTON_TEXT + "\' button to test the API.");
-        activityLayout.addView(mOutputText);
 
         mProgress = new ProgressDialog(this);
         mProgress.setMessage("Calling YouTube Data API ...");
 
-        setContentView(activityLayout);
-
-        // Initialize credentials and service object.
         mCredential = GoogleAccountCredential.usingOAuth2(
                         getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
+
+        SharedPreferences settings =
+                getPreferences(Context.MODE_PRIVATE);
+        String accountName = settings.getString(PREF_ACCOUNT_NAME, null);
+        if (accountName != null) {
+            mCredential.setSelectedAccountName(accountName);
+        }
     }
 
     private void getResultsFromApi() {
@@ -133,7 +121,6 @@ public class OauthActivity extends Activity {
         } catch (Exception e) {
             Toast.makeText(this, "open google account error:" + e, Toast.LENGTH_LONG).show();
         }
-
     }
 
     @Override
@@ -288,17 +275,34 @@ public class OauthActivity extends Activity {
         }
     }
 
-    private void performYoutubeSearch(String queryStr) {
-        HttpTransport transport = AndroidHttp.newCompatibleTransport();
-        JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-        YouTube youTube = new YouTube.Builder(
-                transport, jsonFactory, mCredential)
-                .setApplicationName("YouTube Data API Android Quickstart")
-                .build();
-        try {
-            YouTube.Search.List search = youTube.search().list(Collections.singletonList("id,snippet"));
+    private class SearchRequestTask extends AsyncTask<String, Void, String> {
+        private com.google.api.services.youtube.YouTube mService = null;
+        private Exception mLastError = null;
 
-            //search.setKey("AIzaSyDYL79YVkG_3qGade9Le-6J72qQCPIKCaQ");
+        SearchRequestTask(GoogleAccountCredential credential) {
+            HttpTransport transport = AndroidHttp.newCompatibleTransport();
+            JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+            mService = new com.google.api.services.youtube.YouTube.Builder(
+                    transport, jsonFactory, credential)
+                    .setApplicationName("YouTube Data API Android Quickstart")
+                    .build();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            try {
+                String queryStr = params[0];
+                return getDataFromApi(queryStr);
+            } catch (Exception e) {
+                mLastError = e;
+                cancel(true);
+                return null;
+            }
+        }
+
+        private String getDataFromApi(String queryStr) throws IOException {
+            YouTube.Search.List search = mService.search().list(Collections.singletonList("id,snippet"));
+
             search.setQ(queryStr);
 
             search.setType(Collections.singletonList("video"));
@@ -306,14 +310,51 @@ public class OauthActivity extends Activity {
             search.setFields("items(id/kind,id/videoId,snippet/title,snippet/thumbnails/default/url)");
             search.setMaxResults(15L);
 
-            // Call the API and print results.
             SearchListResponse searchResponse = search.execute();
             List<SearchResult> searchResultList = searchResponse.getItems();
             if (searchResultList != null) {
-                MainActivity.prettyPrint(searchResultList.iterator(), queryStr);
+                String str = MainActivity.prettyPrint(searchResultList.iterator(), queryStr);
+                System.out.println(str);
+                return str;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            return "";
         }
+
+        @Override
+        protected void onPreExecute() {
+            mOutputText.setText("");
+            mProgress.show();
+        }
+
+        @Override
+        protected void onPostExecute(String output) {
+            mProgress.hide();
+            mOutputText.setText(output);
+        }
+
+        @Override
+        protected void onCancelled() {
+            mProgress.hide();
+            if (mLastError != null) {
+                if (mLastError instanceof GooglePlayServicesAvailabilityIOException) {
+                    showGooglePlayServicesAvailabilityErrorDialog(
+                            ((GooglePlayServicesAvailabilityIOException) mLastError)
+                                    .getConnectionStatusCode());
+                } else if (mLastError instanceof UserRecoverableAuthIOException) {
+                    startActivityForResult(
+                            ((UserRecoverableAuthIOException) mLastError).getIntent(),
+                            REQUEST_AUTHORIZATION);
+                } else {
+                    mOutputText.setText("The following error occurred:\n"
+                            + mLastError.getMessage());
+                }
+            } else {
+                mOutputText.setText("Request cancelled.");
+            }
+        }
+    }
+
+    private void performYoutubeSearch(String queryStr) {
+        new SearchRequestTask(mCredential).execute(queryStr);
     }
 }
