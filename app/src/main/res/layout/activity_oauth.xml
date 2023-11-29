@@ -27,6 +27,22 @@
         android:focusable="true"
         android:text="Search" />
 
+    <Button
+        android:id="@+id/btnWl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:text="Watch list" />
+
+    <Button
+        android:id="@+id/btnSub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:text="Subscription" />
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">

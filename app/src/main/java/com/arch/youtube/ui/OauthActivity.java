@@ -19,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.arch.youtube.R;
+import com.arch.youtube.common.ApiKey;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.extensions.android.http.AndroidHttp;
@@ -33,8 +34,13 @@ import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.YouTubeScopes;
 import com.google.api.services.youtube.model.Channel;
 import com.google.api.services.youtube.model.ChannelListResponse;
+import com.google.api.services.youtube.model.PlaylistItem;
+import com.google.api.services.youtube.model.PlaylistItemSnippet;
+import com.google.api.services.youtube.model.ResourceId;
 import com.google.api.services.youtube.model.SearchListResponse;
 import com.google.api.services.youtube.model.SearchResult;
+import com.google.api.services.youtube.model.Subscription;
+import com.google.api.services.youtube.model.SubscriptionSnippet;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -62,7 +68,11 @@ public class OauthActivity extends Activity {
 
     private static final String BUTTON_TEXT = "Call YouTube Data API";
     private static final String PREF_ACCOUNT_NAME = "accountName";
-    private static final String[] SCOPES = {YouTubeScopes.YOUTUBE_READONLY};
+    private static final String[] SCOPES = {
+            YouTubeScopes.YOUTUBE_READONLY,
+            YouTubeScopes.YOUTUBEPARTNER,
+            YouTubeScopes.YOUTUBE_FORCE_SSL
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +90,16 @@ public class OauthActivity extends Activity {
         mCallApiButton = findViewById(R.id.btnSearch);
         mCallApiButton.setOnClickListener(v -> {
             performYoutubeSearch(etSearch.getEditableText().toString());
+        });
+
+        mCallApiButton = findViewById(R.id.btnWl);
+        mCallApiButton.setOnClickListener(v -> {
+            performYoutubeWl("C3-WnwzsaJA");
+        });
+
+        mCallApiButton = findViewById(R.id.btnSub);
+        mCallApiButton.setOnClickListener(v -> {
+            performYoutubeSub("UCEjOSbbaOfgnfRODEEMYlCw");
         });
 
         mOutputText = findViewById(R.id.output);
@@ -231,7 +251,12 @@ public class OauthActivity extends Activity {
                 Channel channel = channels.get(0);
                 channelInfo.add("This channel's ID is " + channel.getId() + ". " +
                         "Its title is '" + channel.getSnippet().getTitle() + ", " +
-                        "and it has " + channel.getStatistics().getViewCount() + " views.");
+                        "and it has " + channel.getStatistics().getViewCount() + " views." +
+                        channel.getContentDetails().toPrettyString());
+                if (null != channel.getContentDetails().getRelatedPlaylists()) {
+                    String history = channel.getContentDetails().getRelatedPlaylists().getWatchHistory();
+                    channelInfo.add(" history:" + history);
+                }
             }
             return channelInfo;
         }
@@ -356,5 +381,220 @@ public class OauthActivity extends Activity {
 
     private void performYoutubeSearch(String queryStr) {
         new SearchRequestTask(mCredential).execute(queryStr);
+    }
+
+    private void performYoutubeWl(String videoId) {
+        new WLRequestTask(mCredential).execute(videoId);
+    }
+
+    private void performYoutubeSub(String channeld) {
+        new SubRequestTask(mCredential).execute(channeld);
+    }
+
+    private class WLRequestTask extends AsyncTask<String, Void, String> {
+        private com.google.api.services.youtube.YouTube mService = null;
+        private Exception mLastError = null;
+
+        WLRequestTask(GoogleAccountCredential credential) {
+            HttpTransport transport = AndroidHttp.newCompatibleTransport();
+            JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+            mService = new com.google.api.services.youtube.YouTube.Builder(
+                    transport, jsonFactory, credential)
+                    .setApplicationName("YouTube Data API Android Quickstart")
+                    .build();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            try {
+                String videoId = params[0];
+                return getDataFromApi(videoId);
+            } catch (Exception e) {
+                mLastError = e;
+                cancel(true);
+                return null;
+            }
+        }
+
+        private String getDataFromApi(String videoId) throws IOException {
+            PlaylistItem playlistItem = new PlaylistItem();
+            PlaylistItemSnippet snippet = new PlaylistItemSnippet();
+            ResourceId resourceId = new ResourceId();
+            resourceId.setVideoId(videoId);
+            resourceId.setKind("youtube#video");
+            snippet.setResourceId(resourceId);
+            snippet.setPlaylistId("WL");
+            snippet.setPosition(20L);
+            playlistItem.setSnippet(snippet);
+            PlaylistItem responseItem = mService.playlistItems()
+                    .insert(Collections.singletonList("snippet"), playlistItem)
+                    .setKey(ApiKey.YOUTUBE_API_KEY)
+                    .execute();
+
+            System.out.println(responseItem);
+            /*
+            {
+                "snippet": {
+                    "playlistId": "WL",
+                    "resourceId": {
+                        "videoId": "",
+                        "kind": "youtube#video"
+                    },
+                    "position": 0
+                }
+            }
+            try {
+                URL url = new URL("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet"
+                        + "&key=" + ApiKey.YOUTUBE_API_KEY
+                        + "&access_token=" + mCredential.getToken());
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setDoOutput(true);
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+
+                String input = "{ \"snippet\": {\"playlistId\": \"WL\",\"resourceId\": {\"videoId\": \"" + videoId + "\",\"kind\": \"youtube#video\"},\"position\": 0}}";
+
+                OutputStream os = conn.getOutputStream();
+                os.write(input.getBytes());
+                os.flush();
+
+                if (conn.getResponseCode() != HttpURLConnection.HTTP_CREATED) {
+                    throw new RuntimeException("Failed : HTTP error code : "
+                            + conn.getResponseCode());
+                }
+
+                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+
+                String output;
+                StringBuilder sb = new StringBuilder();
+                System.out.println("Output from Server .... \n");
+                while ((output = br.readLine()) != null) {
+                    sb.append(output);
+                }
+
+                conn.disconnect();
+                System.out.println(sb);
+                return sb.toString();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (GoogleAuthException e) {
+                e.printStackTrace();
+            }*/
+            return responseItem.toString();
+        }
+
+        @Override
+        protected void onPreExecute() {
+            mOutputText.setText("");
+            mProgress.show();
+        }
+
+        @Override
+        protected void onPostExecute(String output) {
+            mProgress.hide();
+            mOutputText.setText(output);
+        }
+
+        @Override
+        protected void onCancelled() {
+            mProgress.hide();
+            if (mLastError != null) {
+                System.out.println(mLastError);
+                if (mLastError instanceof GooglePlayServicesAvailabilityIOException) {
+                    showGooglePlayServicesAvailabilityErrorDialog(
+                            ((GooglePlayServicesAvailabilityIOException) mLastError)
+                                    .getConnectionStatusCode());
+                } else if (mLastError instanceof UserRecoverableAuthIOException) {
+                    startActivityForResult(
+                            ((UserRecoverableAuthIOException) mLastError).getIntent(),
+                            REQUEST_AUTHORIZATION);
+                } else {
+                    mOutputText.setText("The following error occurred:\n"
+                            + mLastError.getMessage());
+                }
+            } else {
+                mOutputText.setText("Request cancelled.");
+            }
+        }
+    }
+
+    private class SubRequestTask extends AsyncTask<String, Void, String> {
+        private com.google.api.services.youtube.YouTube mService = null;
+        private Exception mLastError = null;
+
+        SubRequestTask(GoogleAccountCredential credential) {
+            HttpTransport transport = AndroidHttp.newCompatibleTransport();
+            JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+            mService = new com.google.api.services.youtube.YouTube.Builder(
+                    transport, jsonFactory, credential)
+                    .setApplicationName("YouTube Data API Android Quickstart")
+                    .build();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            try {
+                String channeld = params[0];
+                return getDataFromApi(channeld);
+            } catch (Exception e) {
+                mLastError = e;
+                cancel(true);
+                return null;
+            }
+        }
+
+        private String getDataFromApi(String channeld) throws IOException {
+            Subscription subscription = new Subscription();
+
+            // Add the snippet object property to the Subscription object.
+            SubscriptionSnippet snippet = new SubscriptionSnippet();
+            ResourceId resourceId = new ResourceId();
+            resourceId.setChannelId("UCsggG8qHVeA-y57I6yMq1tg");
+            resourceId.setKind("youtube#subscription");
+            snippet.setResourceId(resourceId);
+            subscription.setSnippet(snippet);
+
+            YouTube.Subscriptions.Insert request = mService.subscriptions()
+                    .insert(Collections.singletonList("snippet"), subscription);
+            Subscription response = request.setKey(ApiKey.YOUTUBE_API_KEY).execute();
+            System.out.println(response);
+            return response.toPrettyString();
+        }
+
+        @Override
+        protected void onPreExecute() {
+            mOutputText.setText("");
+            mProgress.show();
+        }
+
+        @Override
+        protected void onPostExecute(String output) {
+            mProgress.hide();
+            mOutputText.setText(output);
+        }
+
+        @Override
+        protected void onCancelled() {
+            mProgress.hide();
+            if (mLastError != null) {
+                System.out.println(mLastError);
+                if (mLastError instanceof GooglePlayServicesAvailabilityIOException) {
+                    showGooglePlayServicesAvailabilityErrorDialog(
+                            ((GooglePlayServicesAvailabilityIOException) mLastError)
+                                    .getConnectionStatusCode());
+                } else if (mLastError instanceof UserRecoverableAuthIOException) {
+                    startActivityForResult(
+                            ((UserRecoverableAuthIOException) mLastError).getIntent(),
+                            REQUEST_AUTHORIZATION);
+                } else {
+                    mOutputText.setText("The following error occurred:\n"
+                            + mLastError.getMessage());
+                }
+            } else {
+                mOutputText.setText("Request cancelled.");
+            }
+        }
     }
 }

@@ -73,6 +73,7 @@ public class YouTubeChannelVideoTask extends AsyncTask<Void, Void, List<Channel>
             List<PlaylistItem> playlistItemList = new ArrayList<>();
 
             if (channelsList != null) {
+                channelsList.get(0).getContentDetails().getRelatedPlaylists().getWatchHistory();
                 /*System.out.println(channelsList.get(0));
 
                 //youtubeUser.addUpload(channelsList.get(0).getContentDetails().getRelatedPlaylists().getUploads());
