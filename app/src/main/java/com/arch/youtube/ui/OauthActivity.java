@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
@@ -20,15 +19,13 @@ import android.widget.Toast;
 
 import com.arch.youtube.R;
 import com.arch.youtube.common.ApiKey;
+import com.arch.youtube.common.YoutubeApiHolder;
+import com.arch.youtube.task.BaseAsyncTask;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.YouTubeScopes;
@@ -130,7 +127,7 @@ public class OauthActivity extends Activity {
         } else if (!isDeviceOnline()) {
             mOutputText.setText("No network connection available.");
         } else {
-            new MakeRequestTask(mCredential).execute();
+            new MakeRequestTask().execute();
         }
     }
 
@@ -158,17 +155,16 @@ public class OauthActivity extends Activity {
                 }
                 break;
             case REQUEST_ACCOUNT_PICKER:
-                if (resultCode == RESULT_OK && data != null &&
-                        data.getExtras() != null) {
-                    String accountName =
-                            data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+                if (resultCode == RESULT_OK && data != null && data.getExtras() != null) {
+                    String accountName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
                     if (accountName != null) {
-                        SharedPreferences settings =
-                                getPreferences(Context.MODE_PRIVATE);
+                        SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
                         SharedPreferences.Editor editor = settings.edit();
                         editor.putString(PREF_ACCOUNT_NAME, accountName);
                         editor.apply();
                         mCredential.setSelectedAccountName(accountName);
+
+                        YoutubeApiHolder.setApi(mCredential, this);
                         getResultsFromApi();
                     }
                 }
@@ -216,18 +212,8 @@ public class OauthActivity extends Activity {
         dialog.show();
     }
 
-    private class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
-        private com.google.api.services.youtube.YouTube mService = null;
+    private class MakeRequestTask extends BaseAsyncTask<Void, Void, List<String>> {
         private Exception mLastError = null;
-
-        MakeRequestTask(GoogleAccountCredential credential) {
-            HttpTransport transport = AndroidHttp.newCompatibleTransport();
-            JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-            mService = new com.google.api.services.youtube.YouTube.Builder(
-                    transport, jsonFactory, credential)
-                    .setApplicationName("YouTube Data API Android Quickstart")
-                    .build();
-        }
 
         @Override
         protected List<String> doInBackground(Void... params) {
@@ -245,6 +231,7 @@ public class OauthActivity extends Activity {
             List<String> channelInfo = new ArrayList<String>();
             ChannelListResponse result = mService.channels().list(Collections.singletonList("snippet,contentDetails,statistics"))
                     .setForUsername("GoogleDevelopers")
+                    .setKey(ApiKey.YOUTUBE_API_KEY)
                     .execute();
             List<Channel> channels = result.getItems();
             if (channels != null) {
@@ -300,18 +287,8 @@ public class OauthActivity extends Activity {
         }
     }
 
-    private class SearchRequestTask extends AsyncTask<String, Void, String> {
-        private com.google.api.services.youtube.YouTube mService = null;
+    private class SearchRequestTask extends BaseAsyncTask<String, Void, String> {
         private Exception mLastError = null;
-
-        SearchRequestTask(GoogleAccountCredential credential) {
-            HttpTransport transport = AndroidHttp.newCompatibleTransport();
-            JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-            mService = new com.google.api.services.youtube.YouTube.Builder(
-                    transport, jsonFactory, credential)
-                    .setApplicationName("YouTube Data API Android Quickstart")
-                    .build();
-        }
 
         @Override
         protected String doInBackground(String... params) {
@@ -329,6 +306,7 @@ public class OauthActivity extends Activity {
             YouTube.Search.List search = mService.search().list(Collections.singletonList("id,snippet"));
 
             search.setQ(queryStr);
+            search.setKey(ApiKey.YOUTUBE_API_KEY);
 
             search.setType(Collections.singletonList("video"));
 
@@ -380,29 +358,19 @@ public class OauthActivity extends Activity {
     }
 
     private void performYoutubeSearch(String queryStr) {
-        new SearchRequestTask(mCredential).execute(queryStr);
+        new SearchRequestTask().execute(queryStr);
     }
 
     private void performYoutubeWl(String videoId) {
-        new WLRequestTask(mCredential).execute(videoId);
+        new WLRequestTask().execute(videoId);
     }
 
     private void performYoutubeSub(String channeld) {
-        new SubRequestTask(mCredential).execute(channeld);
+        new SubRequestTask().execute(channeld);
     }
 
-    private class WLRequestTask extends AsyncTask<String, Void, String> {
-        private com.google.api.services.youtube.YouTube mService = null;
+    private class WLRequestTask extends BaseAsyncTask<String, Void, String> {
         private Exception mLastError = null;
-
-        WLRequestTask(GoogleAccountCredential credential) {
-            HttpTransport transport = AndroidHttp.newCompatibleTransport();
-            JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-            mService = new com.google.api.services.youtube.YouTube.Builder(
-                    transport, jsonFactory, credential)
-                    .setApplicationName("YouTube Data API Android Quickstart")
-                    .build();
-        }
 
         @Override
         protected String doInBackground(String... params) {
@@ -520,18 +488,8 @@ public class OauthActivity extends Activity {
         }
     }
 
-    private class SubRequestTask extends AsyncTask<String, Void, String> {
-        private com.google.api.services.youtube.YouTube mService = null;
+    private class SubRequestTask extends BaseAsyncTask<String, Void, String> {
         private Exception mLastError = null;
-
-        SubRequestTask(GoogleAccountCredential credential) {
-            HttpTransport transport = AndroidHttp.newCompatibleTransport();
-            JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-            mService = new com.google.api.services.youtube.YouTube.Builder(
-                    transport, jsonFactory, credential)
-                    .setApplicationName("YouTube Data API Android Quickstart")
-                    .build();
-        }
 
         @Override
         protected String doInBackground(String... params) {

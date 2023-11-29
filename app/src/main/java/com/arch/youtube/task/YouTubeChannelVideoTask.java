@@ -1,16 +1,8 @@
 package com.arch.youtube.task;
 
-import android.os.AsyncTask;
-
 import com.arch.youtube.common.ApiKey;
-import com.google.api.client.extensions.android.http.AndroidHttp;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.Channel;
 import com.google.api.services.youtube.model.ChannelListResponse;
 import com.google.api.services.youtube.model.PlaylistItem;
@@ -25,22 +17,11 @@ import java.util.List;
  * playlists()与playlistItems()的区别,前者是播放列表,后者是播放列表中的视频列表,是一对比的关系
  * 用这个id可以使用mYouTubeDataApi.playlistItems()来获取相关的视频列表,分页参数要带上,否则不会获取所有的.
  */
-public class YouTubeChannelVideoTask extends AsyncTask<Void, Void, List<Channel>> {
-    private YouTube mService = null;
+public class YouTubeChannelVideoTask extends BaseAsyncTask<Void, Void, List<Channel>> {
     private String channelId = null;
     private Exception mLastError = null;
 
-    public YouTubeChannelVideoTask(GoogleAccountCredential credential) {
-        HttpTransport transport = AndroidHttp.newCompatibleTransport();
-        JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-        mService = new YouTube.Builder(
-                transport, jsonFactory, credential)
-                .setApplicationName("YouTube Data API Android Quickstart")
-                .build();
-    }
-
-    public YouTubeChannelVideoTask(YouTube mService, String channelId) {
-        this.mService = mService;
+    public YouTubeChannelVideoTask(String channelId) {
         this.channelId = channelId;
     }
 

@@ -69,7 +69,6 @@ public class YouTubeRecyclerViewFragment extends Fragment {
     private RecyclerView.LayoutManager mLayoutManager;
     private Spinner mPlaylistSpinner;
     private PlaylistCardAdapter mPlaylistCardAdapter;
-    private YouTube mYouTubeDataApi;
     private ProgressDialog mProgressDialog;
 
 
@@ -81,21 +80,16 @@ public class YouTubeRecyclerViewFragment extends Fragment {
      * @param playlistIds    A String array of YouTube Playlist IDs
      * @return A new instance of fragment YouTubeRecyclerViewFragment.
      */
-    public static YouTubeRecyclerViewFragment newInstance(YouTube youTubeDataApi, String[] playlistIds) {
+    public static YouTubeRecyclerViewFragment newInstance(String[] playlistIds) {
         YouTubeRecyclerViewFragment fragment = new YouTubeRecyclerViewFragment();
         Bundle args = new Bundle();
         args.putStringArray(ARG_YOUTUBE_PLAYLIST_IDS, playlistIds);
         fragment.setArguments(args);
-        fragment.setYouTubeDataApi(youTubeDataApi);
         return fragment;
     }
 
     public YouTubeRecyclerViewFragment() {
         // Required empty public constructor
-    }
-
-    public void setYouTubeDataApi(YouTube api) {
-        mYouTubeDataApi = api;
     }
 
     @Override
@@ -109,7 +103,7 @@ public class YouTubeRecyclerViewFragment extends Fragment {
         mProgressDialog = new ProgressDialog(getContext());
 
         // start fetching the playlist titles
-        new GetPlaylistTitlesAsyncTask(mYouTubeDataApi) {
+        new GetPlaylistTitlesAsyncTask() {
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
@@ -216,7 +210,7 @@ public class YouTubeRecyclerViewFragment extends Fragment {
 
         if (fetchPlaylist) {
             // start fetching the selected playlistVideos contents
-            new GetPlaylistAsyncTask(mYouTubeDataApi) {
+            new GetPlaylistAsyncTask() {
                 @Override
                 protected void onPreExecute() {
                     super.onPreExecute();
@@ -242,7 +236,7 @@ public class YouTubeRecyclerViewFragment extends Fragment {
         mPlaylistCardAdapter = new PlaylistCardAdapter(playlistVideos, new LastItemReachedListener() {
             @Override
             public void onLastItem(int position, String nextPageToken) {
-                new GetPlaylistAsyncTask(mYouTubeDataApi) {
+                new GetPlaylistAsyncTask() {
                     @Override
                     public void onPostExecute(Pair<String, List<Video>> result) {
                         handleGetPlaylistResult(playlistVideos, result);

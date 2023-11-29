@@ -168,7 +168,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         super.onResume();
 
 
-        /*new AsyncTask<Void, Void, Void>() {
+        /*new BaseAsyncTask<Void, Void, Void>() {
 
 
             @Override

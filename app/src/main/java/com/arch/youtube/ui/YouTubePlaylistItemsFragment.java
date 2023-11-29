@@ -26,7 +26,6 @@ public class YouTubePlaylistItemsFragment extends Fragment {
     private PlaylistVideos mPlaylistVideos;
     private RecyclerView.LayoutManager mLayoutManager;
     private PlaylistCardAdapter mPlaylistCardAdapter;
-    private YouTube mYouTubeDataApi;
 
     public static YouTubePlaylistItemsFragment newInstance(String[] playlistIds) {
         YouTubePlaylistItemsFragment fragment = new YouTubePlaylistItemsFragment();
@@ -37,7 +36,6 @@ public class YouTubePlaylistItemsFragment extends Fragment {
     }
 
     public YouTubePlaylistItemsFragment() {
-        mYouTubeDataApi = YoutubeApiHolder.holder.mYoutubeApi;
     }
 
     @Override
@@ -80,7 +78,7 @@ public class YouTubePlaylistItemsFragment extends Fragment {
         initCardAdapter(playlistVideos);
 
         if (fetchPlaylist) {
-            new GetPlaylistAsyncTask(mYouTubeDataApi) {
+            new GetPlaylistAsyncTask() {
 
                 @Override
                 public void onPostExecute(Pair<String, List<Video>> result) {
@@ -92,7 +90,7 @@ public class YouTubePlaylistItemsFragment extends Fragment {
 
     private void initCardAdapter(final PlaylistVideos playlistVideos) {
         mPlaylistCardAdapter = new PlaylistCardAdapter(playlistVideos,
-                (position, nextPageToken) -> new GetPlaylistAsyncTask(mYouTubeDataApi) {
+                (position, nextPageToken) -> new GetPlaylistAsyncTask() {
                     @Override
                     public void onPostExecute(Pair<String, List<Video>> result) {
                         handleGetPlaylistResult(playlistVideos, result);

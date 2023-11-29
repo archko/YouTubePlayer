@@ -882,6 +882,10 @@ public class YoutubeTvView extends FrameLayout implements IYoutubeApi {
         Log.i(TAG, "closePlayer : " + mMediaSession.isActive());
     }
 
+    public void destroy(){
+        mWebView.destroy();
+    }
+
     public void updateView(Bundle arguments) {
 
         if (arguments.containsKey("videoId")) {

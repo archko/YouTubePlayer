@@ -11,18 +11,12 @@ import java.util.Arrays;
 import java.util.Collections;
 
 /**
- * This AsyncTask will get the titles of all the playlists that are passed in as a parameter.
+ * This BaseAsyncTask will get the titles of all the playlists that are passed in as a parameter.
  */
-public class GetPlaylistTitlesAsyncTask  extends AsyncTask<String[], Void, PlaylistListResponse> {
+public class GetPlaylistTitlesAsyncTask  extends BaseAsyncTask<String[], Void, PlaylistListResponse> {
     //see: https://developers.google.com/youtube/v3/docs/playlists/list
     private static final String YOUTUBE_PLAYLIST_PART = "snippet";
     private static final String YOUTUBE_PLAYLIST_FIELDS = "items(id,snippet(title))";
-
-    private YouTube mYouTubeDataApi;
-
-    public GetPlaylistTitlesAsyncTask(YouTube api) {
-        mYouTubeDataApi = api;
-    }
 
     @Override
     protected PlaylistListResponse doInBackground(String[]... params) {
@@ -31,7 +25,7 @@ public class GetPlaylistTitlesAsyncTask  extends AsyncTask<String[], Void, Playl
 
         PlaylistListResponse playlistListResponse;
         try {
-            playlistListResponse = mYouTubeDataApi.playlists()
+            playlistListResponse = mService.playlists()
                 .list(Collections.singletonList(YOUTUBE_PLAYLIST_PART))
                 .setId(Arrays.asList(playlistIds))
                 .setFields(YOUTUBE_PLAYLIST_FIELDS)

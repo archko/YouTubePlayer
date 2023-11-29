@@ -14,12 +14,11 @@ import com.google.api.services.youtube.model.PlaylistListResponse;
 import java.io.IOException;
 import java.util.Collections;
 
-public class GetPlaylistsByChannelTask extends AsyncTask<String, Void, PlaylistListResponse> {
+public class GetPlaylistsByChannelTask extends BaseAsyncTask<String, Void, PlaylistListResponse> {
     //https://developers.google.com/youtube/v3/docs/playlists/list?hl=zh-cn&apix_params=%7B"part"%3A%5B"snippet%2CcontentDetails"%5D%2C"channelId"%3A"UC_x5XG1OV2P6uZZ5FSM9Ttw"%2C"maxResults"%3A25%7D&apix=true
     private static final String YOUTUBE_PLAYLIST_PART = "snippet";
     private static final String YOUTUBE_PLAYLIST_FIELDS = "items(id,contentDetails,snippet(title,thumbnails,publishedAt,description))";
 
-    private YouTube mService = null;
     private String channelId = null;
 
     public GetPlaylistsByChannelTask(GoogleAccountCredential credential) {

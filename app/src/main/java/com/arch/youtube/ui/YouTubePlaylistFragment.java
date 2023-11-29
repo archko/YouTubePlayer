@@ -42,7 +42,7 @@ public class YouTubePlaylistFragment extends Fragment {
     }
 
     public YouTubePlaylistFragment() {
-        mYouTubeDataApi = YoutubeApiHolder.holder.mYoutubeApi;
+        mYouTubeDataApi = YoutubeApiHolder.holder.mYoutube;
     }
 
     @Override

@@ -1,11 +1,9 @@
 package com.arch.youtube.task;
 
-import android.os.AsyncTask;
 import android.util.Log;
 import android.util.Pair;
 
 import com.arch.youtube.common.ApiKey;
-import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.PlaylistItem;
 import com.google.api.services.youtube.model.PlaylistItemListResponse;
 import com.google.api.services.youtube.model.Video;
@@ -29,7 +27,7 @@ import java.util.List;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public abstract class GetPlaylistAsyncTask extends AsyncTask<String, Void, Pair<String, List<Video>>> {
+public abstract class GetPlaylistAsyncTask extends BaseAsyncTask<String, Void, Pair<String, List<Video>>> {
     private static final String TAG = "GetPlaylistAsyncTask";
     private static final Long YOUTUBE_PLAYLIST_MAX_RESULTS = 10L;
 
@@ -39,12 +37,6 @@ public abstract class GetPlaylistAsyncTask extends AsyncTask<String, Void, Pair<
     //see: https://developers.google.com/youtube/v3/docs/videos/list
     private static final String YOUTUBE_VIDEOS_PART = "snippet,contentDetails,statistics"; // video resource properties that the response will include.
     private static final String YOUTUBE_VIDEOS_FIELDS = "items(id,snippet(title,description,thumbnails/high),contentDetails/duration,statistics)"; // selector specifying which fields to include in a partial response.
-
-    private YouTube mYouTubeDataApi;
-
-    public GetPlaylistAsyncTask(YouTube api) {
-        mYouTubeDataApi = api;
-    }
 
     @Override
     protected Pair<String, List<Video>> doInBackground(String... params) {
@@ -59,7 +51,7 @@ public abstract class GetPlaylistAsyncTask extends AsyncTask<String, Void, Pair<
 
         PlaylistItemListResponse playlistItemListResponse;
         try {
-            playlistItemListResponse = mYouTubeDataApi.playlistItems()
+            playlistItemListResponse = mService.playlistItems()
                     .list(Collections.singletonList(YOUTUBE_PLAYLIST_PART))
                     .setPlaylistId(playlistId)
                     .setPageToken(nextPageToken)
@@ -87,7 +79,7 @@ public abstract class GetPlaylistAsyncTask extends AsyncTask<String, Void, Pair<
         // get details of the videos on this playlist page
         VideoListResponse videoListResponse = null;
         try {
-            videoListResponse = mYouTubeDataApi.videos()
+            videoListResponse = mService.videos()
                     .list(Collections.singletonList(YOUTUBE_VIDEOS_PART))
                     .setFields(YOUTUBE_VIDEOS_FIELDS)
                     .setKey(ApiKey.YOUTUBE_API_KEY)

@@ -50,6 +50,18 @@ public class VideoPlayerFragment extends Fragment {
         super.onStop();
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        youtubeTvView.closePlayer();
+        youtubeTvView.destroy();
+    }
+
     public void setPlaybackQuality(VideoQuality videoQuality) {
         youtubeTvView.setPlaybackQuality(videoQuality);
     }

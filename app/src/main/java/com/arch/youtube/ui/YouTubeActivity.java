@@ -8,35 +8,10 @@ import android.view.View;
 import com.arch.youtube.R;
 import com.arch.youtube.common.ApiKey;
 import com.arch.youtube.common.YoutubeApiHolder;
-import com.google.api.client.extensions.android.http.AndroidHttp;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.youtube.YouTube;
-import com.google.api.services.youtube.YouTubeScopes;
-
-import java.util.Collections;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 public class YouTubeActivity extends AppCompatActivity {
-    private static final String[] YOUTUBE_PLAYLISTS = {
-            "PLWz5rJ2EKKc_Tt7q77qwyKRgytF1RzRx8",
-            "PLWz5rJ2EKKc9CBxr3BVjPTPoDPLdPIFCE",
-            "PLWz5rJ2EKKc_XOgcRukSoKKjewFJZrKV0",
-            "PLWz5rJ2EKKc-lJo_RGGXL2Psr8vVCTWjM",
-            "PLWz5rJ2EKKc9ofd2f-_-xmUi07wIGZa1c",
-            "PLWz5rJ2EKKc-riD21lnOjVYBqSkNII3_k"
-    };
-    private static final String[] YOUTUBE_CHANNELS = {
-            "UC_x5XG1OV2P6uZZ5FSM9Ttw",
-            "UC3x4rHaszl7OIyEYC_J6aPA"
-    };
-    private YouTube mYoutubeDataApi;
-    private final GsonFactory mJsonFactory = new GsonFactory();
-    private final HttpTransport mTransport = AndroidHttp.newCompatibleTransport();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,10 +33,7 @@ public class YouTubeActivity extends AppCompatActivity {
             dialog.show();
 
         } else if (savedInstanceState == null) {
-            mYoutubeDataApi = new YouTube.Builder(mTransport, mJsonFactory, null)
-                    .setApplicationName(getResources().getString(R.string.app_name))
-                    .build();
-            YoutubeApiHolder.holder.mYoutubeApi = mYoutubeDataApi;
+            YoutubeApiHolder.setApi(null, this);
 
             /*getSupportFragmentManager().beginTransaction()
                     .add(R.id.container, YouTubeRecyclerViewFragment.newInstance(mYoutubeDataApi, YOUTUBE_PLAYLISTS))
