@@ -9,9 +9,15 @@ import com.arch.youtube.R;
 import com.arch.youtube.common.ApiKey;
 import com.arch.youtube.common.YoutubeApiHolder;
 import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.YouTubeScopes;
+
+import java.util.Collections;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -86,6 +92,12 @@ public class YouTubeActivity extends AppCompatActivity {
                         YouTubePlaylistFragment.class.getName(),
                         "UC_x5XG1OV2P6uZZ5FSM9Ttw",
                         YouTubeActivity.this);
+            }
+        });
+        findViewById(R.id.test_channel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                OauthActivity.start(YouTubeActivity.this);
             }
         });
     }
