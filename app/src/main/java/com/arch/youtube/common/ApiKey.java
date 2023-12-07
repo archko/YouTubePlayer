@@ -14,7 +14,6 @@ package com.arch.youtube.common;
  * limitations under the License.
  */
 public class ApiKey {
-    //public static final String YOUTUBE_API_KEY = "AIzaSyD_MwISnO-u0UJXtUxqI6UKKmn65JnIWsU";
-    public static final String YOUTUBE_API_KEY = "AIzaSyDYL79YVkG_3qGade9Le-6J72qQCPIKCaQ";
+    public static final String YOUTUBE_API_KEY = "AIzaSyD_MwISnO-u0UJXtUxqI6UKKmn65JnIWsU";
 
 }
