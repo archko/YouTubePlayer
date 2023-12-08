@@ -1,0 +1,12 @@
+{
+  "client_id": "your oauthid ",
+  "redirect_uri": "com.arch.youtube:/oauth2redirect",
+  "end_session_redirect_uri": "com.arch.youtube:/oauth2redirect",
+  "authorization_scope": "openid email profile https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl",
+  "discovery_uri": "https://accounts.google.com/.well-known/openid-configuration",
+  "authorization_endpoint_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_endpoint_uri": "https://oauth2.googleapis.com/token",
+  "registration_endpoint_uri": "https://www.googleapis.com/oauth2/v3/userinfo",
+  "user_info_endpoint_uri": "",
+  "https_required": true
+}
