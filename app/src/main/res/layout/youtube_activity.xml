@@ -8,6 +8,12 @@
     tools:ignore="MergeRootFrame">
 
     <Button
+        android:id="@+id/test_oauth"
+        android:text="测试oauth2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
         android:id="@+id/test_channel"
         android:text="测试频道列表"
         android:layout_width="match_parent"

@@ -9,6 +9,8 @@ import com.arch.youtube.R;
 import com.arch.youtube.common.ApiKey;
 import com.arch.youtube.common.YoutubeApiHolder;
 
+import net.openid.appauthdemo.LoginActivity;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 public class YouTubeActivity extends AppCompatActivity {
@@ -70,6 +72,12 @@ public class YouTubeActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 OauthActivity.start(YouTubeActivity.this);
+            }
+        });
+        findViewById(R.id.test_oauth).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LoginActivity.start(YouTubeActivity.this);
             }
         });
     }

@@ -12,6 +12,11 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
+import android.webkit.WebResourceResponse;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -19,8 +24,10 @@ import android.widget.Toast;
 
 import com.arch.youtube.R;
 import com.arch.youtube.common.ApiKey;
+import com.arch.youtube.common.AppExecutors;
 import com.arch.youtube.common.YoutubeApiHolder;
 import com.arch.youtube.task.BaseAsyncTask;
+import com.arch.youtube.utils.Auth;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -40,6 +47,7 @@ import com.google.api.services.youtube.model.Subscription;
 import com.google.api.services.youtube.model.SubscriptionSnippet;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,6 +57,8 @@ import java.util.List;
  * @author: archko 2023/11/29 :10:55
  */
 public class OauthActivity extends Activity {
+
+    private static final String TAG = "oauth";
 
     public static void start(Context context) {
         Intent intent = new Intent(context, OauthActivity.class);
@@ -70,13 +80,19 @@ public class OauthActivity extends Activity {
             YouTubeScopes.YOUTUBEPARTNER,
             YouTubeScopes.YOUTUBE_FORCE_SSL
     };
+    private WebView mWebView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_oauth);
 
-        Button mCallApiButton = findViewById(R.id.btnOauth);
+        mWebView = findViewById(R.id.webview);
+        setupWebview();
+
+        findViewById(R.id.btnOauth).setOnClickListener(v -> oauth());
+
+        Button mCallApiButton = findViewById(R.id.btnApi);
         mCallApiButton.setOnClickListener(v -> {
             mOutputText.setText("");
             getResultsFromApi();
@@ -117,6 +133,48 @@ public class OauthActivity extends Activity {
         if (accountName != null) {
             mCredential.setSelectedAccountName(accountName);
         }
+    }
+
+    private void setupWebview() {
+        final WebSettings settings = mWebView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setJavaScriptCanOpenWindowsAutomatically(true);
+        settings.setPluginState(WebSettings.PluginState.ON);
+        settings.setLoadWithOverviewMode(true);
+        settings.setUseWideViewPort(true);
+        settings.setDomStorageEnabled(true);
+        settings.setMediaPlaybackRequiresUserGesture(false);
+
+        mWebView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageStarted(android.webkit.WebView view, java.lang.String url, android.graphics.Bitmap favicon) {
+                Log.d(TAG, "STAR " + url);
+            }
+
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, final String url) {
+                Log.d(TAG, "LOAD OK: " + url);
+                return super.shouldInterceptRequest(view, url);
+            }
+        });
+    }
+
+    private void oauth() {
+        AppExecutors.Companion.getInstance().networkIO().execute(() -> {
+            try {
+                String url = new Auth().authorizingUrl(OauthActivity.this);
+                AppExecutors.Companion.getInstance().mainThread().execute(() -> openUrl(url));
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        });
+    }
+
+    private void openUrl(String url) {
+        mWebView.loadUrl(url);
     }
 
     private void getResultsFromApi() {
